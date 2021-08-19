@@ -10,7 +10,21 @@ import os
 
 BASE_DIR = 'c:/Users/Vincent/Box/Clement Research/VASP/'
 
-def parse_output(vasprun_filename, oszicar_filename, incar_filename):
+def parse_output(vasprun_filename, oszicar_filename, incar_filename, save_path):
+    """
+        DESCRIPTION: Given the vasprun.xml, OSZICAR, and INCAR files, parses the files and extracts data related to the energy convergence of
+                     each ionic and electronic steps. Plots the data in matplotlib, and saves the figure
+        PARAMETERS:
+            vasprun_filename: string
+                the vasprun.xml file path
+            oszicar_filename: string
+                the OSZICAR file path
+            incar_filename: string
+                the INCAR file path
+            save_path: string
+                the path to save the plot
+        RETURNS: None
+    """
     vasp_run = Vasprun(vasprun_filename, exception_on_bad_xml=False)
     oszicar = Oszicar(oszicar_filename)
     incar = Incar.from_file(incar_filename)
@@ -98,13 +112,26 @@ def parse_output(vasprun_filename, oszicar_filename, incar_filename):
     ax4.legend()
 
     fig.tight_layout(pad=1.5)
+    plt.savefig(save_path)
     plt.show()
 
 def get_remote_dir(username, server, password, remote_dir, local_dir):
     """
-    DESCRIPTION: 
-    PARAMETERS:
-    RETURNS:
+    DESCRIPTION: Downloads all vasp related files from a remote directory. Any file that contains the phrase
+                 'incar', 'potcar', 'poscar', 'kpoints', 'contcar', 'chgcar', 'doscar', 'vaspjob', 'oszicar', 'outcar',  or 'vasprun',
+                 case-insensative, is downloaded to a local directory. 
+    PARAMETERS: 
+        username: string
+            ssh server username
+        server: string
+            ssh server name (pod.cnsi.ucsb.edu, braid.cnsi.ucsb.edu)
+        password: string
+            ssh server password, or None if you have an ssh key. It is HIGHLY RECOMMENDED to use an ssh key
+        remote_dir: string
+            the path to the directory on the server whose contents are to be copied
+        local_dir: string
+            the path to the local directory where data will be copied to
+    RETURNS: None
     """
     client = SSHClient()
     client.load_system_host_keys()
@@ -224,7 +251,10 @@ vasprun_file = local_path + vasprun_name
 oszicar_file = local_path + oszicar_name
 incar_file = local_path + incar_name
 
+# define path to save plot to
+save_path = local_path + "plots.png"
+
 # copy data files from remote server to local machine
 get_remote_dir(username, server, password, remote_path, local_path)
-# parse the output files that are on the local machine
-parse_output(vasprun_file, oszicar_file, incar_file)
+# parse the output files that are on the local machine, save plot to save_path
+parse_output(vasprun_file, oszicar_file, incar_file, save_path)
